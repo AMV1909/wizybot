@@ -1,3 +1,6 @@
+import axios from "axios";
+import { OPEN_EXCHANGE_API_URL } from "src/common/constants";
+
 /**
  * Interface for currency conversion parameters
  */
@@ -8,51 +11,38 @@ interface CurrencyConversionParams {
 }
 
 /**
- * Interface for currency conversion response
+ * Interface for the Open Exchange Rates API response
  */
 interface CurrencyConversionResponse {
-    amount: number;
-    from: string;
-    to: string;
-    result: number;
-    rate: number;
+    base: string;
+    rates: Record<string, number>;
 }
 
 /**
- * Converts an amount from one currency to another
- * This is a mock implementation that uses fixed exchange rates
+ * Converts an amount from one currency to another using real-time exchange rates
+ * from the Open Exchange Rates API
  *
- * @param params - Object containing amount and currency codes
- * @returns Promise<CurrencyConversionResponse> - Object containing conversion result
+ * @param params - Object containing:
+ *   - amount: The amount to convert
+ *   - from: Source currency code (e.g., "USD", "EUR")
+ *   - to: Target currency code (e.g., "GBP", "JPY")
+ * @returns Promise<number> - The converted amount in the target currency
  */
 export async function convertCurrencies(
     params: CurrencyConversionParams,
-): Promise<CurrencyConversionResponse> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+): Promise<number> {
+    const response = await axios.get<CurrencyConversionResponse>(
+        OPEN_EXCHANGE_API_URL,
+    );
+    const rates = response.data.rates;
 
-    // Mock exchange rates (in a real app, these would come from an API)
-    const rates: Record<string, number> = {
-        USD: 1,
-        EUR: 0.85,
-        GBP: 0.73,
-        JPY: 110.0,
-    };
-
-    // Get exchange rates
+    // Get exchange rates for source and target currencies
     const fromRate = rates[params.from.toUpperCase()] || 1;
     const toRate = rates[params.to.toUpperCase()] || 1;
 
-    // Calculate conversion
+    // Calculate conversion using the ratio of target to source rates
     const rate = toRate / fromRate;
     const result = params.amount * rate;
 
-    // Return conversion result
-    return {
-        amount: params.amount,
-        from: params.from.toUpperCase(),
-        to: params.to.toUpperCase(),
-        result: Number(result.toFixed(2)),
-        rate: Number(rate.toFixed(4)),
-    };
+    return result;
 }

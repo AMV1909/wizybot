@@ -1,6 +1,6 @@
-import fs from "fs";
-import csv from "csv-parser";
-import path from "path";
+import * as fs from "fs";
+import * as csv from "csv-parser";
+import * as path from "path";
 
 /**
  * Interface representing a product in the search results
@@ -37,7 +37,7 @@ export async function searchProducts(query: string): Promise<SearchResponse> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Mock product database
-    const filePath = path.resolve(__dirname, "../../../products/products.csv");
+    const filePath = path.join(process.cwd(), "src", "products", "products_list.csv");
     const products: Product[] = [];
 
     return new Promise((resolve, reject) => {

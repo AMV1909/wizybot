@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { OpenAI } from "openai";
-import { ToolCall } from "openai/resources/beta/threads/runs/steps";
 
 import { env } from "../config/envConfig";
 import { searchProducts } from "./functions/search-products.function";
@@ -69,14 +68,15 @@ export class ChatService {
             model: env.OPENAI_MODEL,
             messages: [{ role: "user", content: query }],
             tools,
+            tool_choice: "auto"
         });
 
-        const toolCalls = initialResponse.choices[0].message
-            .tool_calls as ToolCall[];
+        const message = initialResponse.choices[0].message;
+        const toolCalls = message.tool_calls;
 
-        // If no functions were called, return early
+        // If no functions were called, return the message content
         if (!toolCalls || toolCalls.length === 0) {
-            return "No function to execute.";
+            return message.content || "I couldn't find any relevant information.";
         }
 
         // Process each function call and collect responses
@@ -119,7 +119,7 @@ export class ChatService {
             model: env.OPENAI_MODEL,
             messages: [
                 { role: "user", content: query },
-                initialResponse.choices[0].message,
+                message,
                 ...toolResponses,
             ],
         });
